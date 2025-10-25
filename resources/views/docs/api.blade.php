@@ -11,7 +11,7 @@
 <div class="endpoint">
     <div class="endpoint-header">
         <span class="method get">GET</span>
-        <span class="endpoint-path">/api/v1/weather/current/{location}</span>
+        <span class="endpoint-path">/{{ Route::getRoutes()->getByName('api.v1.weather.current')->uri() }}</span>
     </div>
     <p class="endpoint-description">
         Get current weather conditions for a specified location in Denmark.
@@ -95,7 +95,7 @@
 <div class="endpoint">
     <div class="endpoint-header">
         <span class="method get">GET</span>
-        <span class="endpoint-path">/api/v1/weather/forecast/{location}</span>
+        <span class="endpoint-path">/{{ Route::getRoutes()->getByName('api.v1.weather.forecast')->uri() }}</span>
     </div>
     <p class="endpoint-description">
         Get weather forecast for a specified location in Denmark.
@@ -175,7 +175,7 @@
 <div class="endpoint">
     <div class="endpoint-header">
         <span class="method get">GET</span>
-        <span class="endpoint-path">/api/v1/weather/historical/{location}</span>
+        <span class="endpoint-path">/{{ Route::getRoutes()->getByName('api.v1.weather.historical')->uri() }}</span>
     </div>
     <p class="endpoint-description">
         Get historical weather data for a specified location in Denmark.
