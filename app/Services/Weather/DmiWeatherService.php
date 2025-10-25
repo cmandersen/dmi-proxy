@@ -2,12 +2,16 @@
 
 namespace App\Services\Weather;
 
+use App\DTOs\CoordinatesData;
 use App\DTOs\ForecastDataDTO;
 use App\DTOs\HistoricalWeatherDTO;
+use App\DTOs\LocationData;
+use App\DTOs\PeriodData;
 use App\DTOs\WeatherDataDTO;
 use App\Exceptions\WeatherServiceException;
 use App\Services\Location\GeocodingService;
 use Carbon\Carbon;
+use Illuminate\Http\Client\Response;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Http;
 
@@ -68,9 +72,9 @@ class DmiWeatherService
                 $limitedForecast = array_slice($forecastData, 0, $hours);
 
                 return new ForecastDataDTO(
-                    location: new \App\DTOs\LocationData(
+                    location: new LocationData(
                         name: $location,
-                        coordinates: new \App\DTOs\CoordinatesData(
+                        coordinates: new CoordinatesData(
                             lat: $coords['lat'],
                             lon: $coords['lon'],
                         ),
@@ -114,15 +118,15 @@ class DmiWeatherService
                 $historicalData = $this->transformer->transformHistorical($responses, $timeResolution);
 
                 return new HistoricalWeatherDTO(
-                    location: new \App\DTOs\LocationData(
+                    location: new LocationData(
                         name: $location,
-                        coordinates: new \App\DTOs\CoordinatesData(
+                        coordinates: new CoordinatesData(
                             lat: $station['lat'],
                             lon: $station['lon'],
                         ),
                         station: $station['name'],
                     ),
-                    period: new \App\DTOs\PeriodData(
+                    period: new PeriodData(
                         from: Carbon::parse($from),
                         to: Carbon::parse($to),
                         resolution: $timeResolution,
@@ -170,7 +174,7 @@ class DmiWeatherService
         });
 
         return collect($responses)
-            ->filter(fn ($response) => $response instanceof \Illuminate\Http\Client\Response && $response->successful())
+            ->filter(fn ($response) => $response instanceof Response && $response->successful())
             ->mapWithKeys(function ($response, $parameterId) {
                 $features = $response->json('features', []);
 
@@ -233,7 +237,7 @@ class DmiWeatherService
         });
 
         return collect($responses)
-            ->filter(fn ($response) => $response instanceof \Illuminate\Http\Client\Response && $response->successful())
+            ->filter(fn ($response) => $response instanceof Response && $response->successful())
             ->mapWithKeys(function ($response, $parameterId) {
                 $features = $response->json('features', []);
                 if (empty($features)) {
