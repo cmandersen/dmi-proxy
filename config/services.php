@@ -43,6 +43,7 @@ return [
             'current' => env('DMI_CACHE_CURRENT', 300),    // 5 minutes
             'forecast' => env('DMI_CACHE_FORECAST', 1800), // 30 minutes
             'historical' => env('DMI_CACHE_HISTORICAL', 86400), // 24 hours
+            'geocoding' => env('DMI_CACHE_GEOCODING', 86400), // 24 hours
         ],
     ],
 

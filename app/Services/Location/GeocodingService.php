@@ -29,7 +29,7 @@ class GeocodingService
         $normalizedLocation = $this->normalize($location);
         $cacheKey = "geocode:{$normalizedLocation}";
 
-        return Cache::remember($cacheKey, 86400, function () use ($location) {
+        return Cache::remember($cacheKey, config('services.dmi.cache_ttl.geocoding', 86400), function () use ($location) {
             $dawaCoords = $this->geocodeWithDawa($location);
 
             if ($dawaCoords) {
@@ -130,6 +130,7 @@ class GeocodingService
                 return ['lat' => $lat, 'lon' => $lon];
             }
         }
+
         return null;
     }
 }
