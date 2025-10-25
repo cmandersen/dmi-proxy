@@ -13,7 +13,7 @@ class WeatherTransformerTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
-        $this->transformer = new WeatherTransformer();
+        $this->transformer = new WeatherTransformer;
     }
 
     public function test_transforms_weather_dto_with_all_parameters(): void

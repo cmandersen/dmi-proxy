@@ -139,9 +139,9 @@ class WeatherTransformer
 
             return $dataPoint;
         })
-        ->filter(fn ($forecast) => Carbon::parse($forecast['timestamp'])->isFuture())
-        ->values()
-        ->all();
+            ->filter(fn ($forecast) => Carbon::parse($forecast['timestamp'])->isFuture())
+            ->values()
+            ->all();
     }
 
     private function kelvinToCelsius(?float $kelvin): ?float
@@ -214,6 +214,7 @@ class WeatherTransformer
                 ];
             }
         }
+
         return null;
     }
 

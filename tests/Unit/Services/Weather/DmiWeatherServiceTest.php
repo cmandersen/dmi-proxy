@@ -11,6 +11,7 @@ use ReflectionClass;
 class DmiWeatherServiceTest extends TestCase
 {
     private DmiWeatherService $service;
+
     private ReflectionClass $reflection;
 
     protected function setUp(): void

@@ -173,6 +173,7 @@ class DmiWeatherService
             ->filter(fn ($response) => $response instanceof \Illuminate\Http\Client\Response && $response->successful())
             ->mapWithKeys(function ($response, $parameterId) {
                 $features = $response->json('features', []);
+
                 return [$parameterId => $features];
             })
             ->all();
@@ -185,7 +186,7 @@ class DmiWeatherService
         $response = Http::dmiMetObs()->get('/collections/station/items', [
             'status' => 'Active',
             'bbox' => "{$bbox['minLon']},{$bbox['minLat']},{$bbox['maxLon']},{$bbox['maxLat']}",
-            'datetime' => now()->toIso8601String() . '/..',
+            'datetime' => now()->toIso8601String().'/..',
             'limit' => 10,
         ]);
 
@@ -238,6 +239,7 @@ class DmiWeatherService
                 if (empty($features)) {
                     return [$parameterId => null];
                 }
+
                 return [$parameterId => $features[0]['properties']];
             })
             ->all();

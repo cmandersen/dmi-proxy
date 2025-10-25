@@ -111,7 +111,7 @@ class CacheDanishCities extends Command
 
         $totalCached = $cachedCount + $settlementCount + $postalCount;
         $this->info("✓ Successfully cached {$totalCached} locations");
-        $this->info("Cache TTL: 7 days");
+        $this->info('Cache TTL: 7 days');
 
         return self::SUCCESS;
     }

@@ -12,7 +12,7 @@ class CalculateWindChillTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
-        $this->calculator = new CalculateWindChill();
+        $this->calculator = new CalculateWindChill;
     }
 
     public function test_calculates_wind_chill_with_valid_conditions(): void
