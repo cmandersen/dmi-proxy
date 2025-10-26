@@ -222,6 +222,17 @@ class WeatherControllerTest extends TestCase
     public function test_can_get_historical_weather(): void
     {
         Http::fake([
+            'dmigw.govcloud.dk/v2/metObs/collections/station/items*' => Http::response([
+                'features' => [
+                    [
+                        'geometry' => ['coordinates' => [12.5683, 55.6761]],
+                        'properties' => [
+                            'stationId' => '06180',
+                            'name' => 'Copenhagen',
+                        ],
+                    ],
+                ],
+            ]),
             'dmigw.govcloud.dk/v2/climateData/collections/stationValue/items*' => Http::response([
                 'features' => [
                     [
@@ -271,6 +282,17 @@ class WeatherControllerTest extends TestCase
     public function test_historical_supports_different_resolutions(): void
     {
         Http::fake([
+            'dmigw.govcloud.dk/v2/metObs/collections/station/items*' => Http::response([
+                'features' => [
+                    [
+                        'geometry' => ['coordinates' => [12.5683, 55.6761]],
+                        'properties' => [
+                            'stationId' => '06180',
+                            'name' => 'Copenhagen',
+                        ],
+                    ],
+                ],
+            ]),
             'dmigw.govcloud.dk/v2/climateData/collections/stationValue/items*' => Http::response([
                 'features' => [
                     [
