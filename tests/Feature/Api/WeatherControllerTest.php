@@ -142,7 +142,7 @@ class WeatherControllerTest extends TestCase
     public function test_can_get_forecast_for_location(): void
     {
         Http::fake([
-            'dmigw.govcloud.dk/v2/forecastedr/collections/harmonie_dini_sf/position*' => Http::response([
+            'dmigw.govcloud.dk/v1/forecastedr/collections/harmonie_dini_sf/position*' => Http::response([
                 'domain' => [
                     'axes' => [
                         't' => [
@@ -192,7 +192,7 @@ class WeatherControllerTest extends TestCase
     public function test_forecast_respects_hours_parameter(): void
     {
         Http::fake([
-            'dmigw.govcloud.dk/v2/forecastedr/collections/harmonie_dini_sf/position*' => Http::response([
+            'dmigw.govcloud.dk/v1/forecastedr/collections/harmonie_dini_sf/position*' => Http::response([
                 'domain' => [
                     'axes' => [
                         't' => [
