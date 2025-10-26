@@ -22,8 +22,8 @@ A Laravel-based proxy API for the Danish Meteorological Institute (DMI) weather 
 1. Clone the repository:
 
 ```bash
-git clone <repository-url>
-cd dmi
+git clone https://github.com/cmandersen/dmi-proxy.git
+cd dmi-proxy
 ```
 
 2. Install dependencies:
