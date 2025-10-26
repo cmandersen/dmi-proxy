@@ -1,6 +1,6 @@
 <?php
 
-namespace Tests\Feature\Api\V1;
+namespace Tests\Feature\Api;
 
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Http;
@@ -42,7 +42,7 @@ class WeatherControllerTest extends TestCase
             ]),
         ]);
 
-        $response = $this->getJson('/api/v1/weather/current/copenhagen');
+        $response = $this->getJson('/api/weather/current/copenhagen');
 
         $response->assertStatus(200)
             ->assertJsonStructure([
@@ -78,14 +78,14 @@ class WeatherControllerTest extends TestCase
             ]),
         ]);
 
-        $response = $this->getJson('/api/v1/weather/current/55.6761,12.5683');
+        $response = $this->getJson('/api/weather/current/55.6761,12.5683');
 
         $response->assertStatus(200);
     }
 
     public function test_returns_error_for_unknown_location(): void
     {
-        $response = $this->getJson('/api/v1/weather/current/unknowncity');
+        $response = $this->getJson('/api/weather/current/unknowncity');
 
         $response->assertStatus(400)
             ->assertJsonFragment([
@@ -128,11 +128,11 @@ class WeatherControllerTest extends TestCase
         ]);
 
         // First call - should hit API
-        $response1 = $this->getJson('/api/v1/weather/current/copenhagen');
+        $response1 = $this->getJson('/api/weather/current/copenhagen');
         $response1->assertStatus(200);
 
         // Second call - should use cache (HTTP fake won't be hit again if cached)
-        $response2 = $this->getJson('/api/v1/weather/current/copenhagen');
+        $response2 = $this->getJson('/api/weather/current/copenhagen');
         $response2->assertStatus(200);
 
         // Both responses should be identical
@@ -173,7 +173,7 @@ class WeatherControllerTest extends TestCase
             ]),
         ]);
 
-        $response = $this->getJson('/api/v1/weather/forecast/copenhagen');
+        $response = $this->getJson('/api/weather/forecast/copenhagen');
 
         $response->assertStatus(200)
             ->assertJsonStructure([
@@ -213,7 +213,7 @@ class WeatherControllerTest extends TestCase
             ]),
         ]);
 
-        $response = $this->getJson('/api/v1/weather/forecast/copenhagen?hours=10');
+        $response = $this->getJson('/api/weather/forecast/copenhagen?hours=10');
 
         $response->assertStatus(200);
         $this->assertLessThanOrEqual(10, count($response->json('forecast')));
@@ -242,7 +242,7 @@ class WeatherControllerTest extends TestCase
             ]),
         ]);
 
-        $response = $this->getJson('/api/v1/weather/historical/copenhagen?from=2024-01-01&to=2024-01-02');
+        $response = $this->getJson('/api/weather/historical/copenhagen?from=2024-01-01&to=2024-01-02');
 
         $response->assertStatus(200)
             ->assertJsonStructure([
@@ -254,7 +254,7 @@ class WeatherControllerTest extends TestCase
 
     public function test_historical_requires_from_and_to_dates(): void
     {
-        $response = $this->getJson('/api/v1/weather/historical/copenhagen');
+        $response = $this->getJson('/api/weather/historical/copenhagen');
 
         $response->assertStatus(422)
             ->assertJsonValidationErrors(['from', 'to']);
@@ -262,7 +262,7 @@ class WeatherControllerTest extends TestCase
 
     public function test_historical_validates_date_order(): void
     {
-        $response = $this->getJson('/api/v1/weather/historical/copenhagen?from=2024-01-10&to=2024-01-01');
+        $response = $this->getJson('/api/weather/historical/copenhagen?from=2024-01-10&to=2024-01-01');
 
         $response->assertStatus(422)
             ->assertJsonValidationErrors(['to']);
@@ -283,7 +283,7 @@ class WeatherControllerTest extends TestCase
             ]),
         ]);
 
-        $response = $this->getJson('/api/v1/weather/historical/copenhagen?from=2024-01-01&to=2024-01-31&resolution=month');
+        $response = $this->getJson('/api/weather/historical/copenhagen?from=2024-01-01&to=2024-01-31&resolution=month');
 
         $response->assertStatus(200)
             ->assertJsonPath('period.resolution', 'month');

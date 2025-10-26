@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Http\Requests\Api\V1;
+namespace App\Http\Requests\Api;
 
 use App\Enums\HistoricalWeatherParameter;
 use App\Enums\TimeResolution;

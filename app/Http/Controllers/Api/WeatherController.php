@@ -1,11 +1,11 @@
 <?php
 
-namespace App\Http\Controllers\Api\V1;
+namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
-use App\Http\Requests\Api\V1\CurrentWeatherRequest;
-use App\Http\Requests\Api\V1\ForecastRequest;
-use App\Http\Requests\Api\V1\HistoricalWeatherRequest;
+use App\Http\Requests\Api\CurrentWeatherRequest;
+use App\Http\Requests\Api\ForecastRequest;
+use App\Http\Requests\Api\HistoricalWeatherRequest;
 use App\Services\Weather\DmiWeatherService;
 use Illuminate\Http\JsonResponse;
 

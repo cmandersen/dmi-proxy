@@ -11,7 +11,7 @@
 <div class="endpoint">
     <div class="endpoint-header">
         <span class="method get">GET</span>
-        <span class="endpoint-path">/{{ Route::getRoutes()->getByName('api.v1.weather.current')->uri() }}</span>
+        <span class="endpoint-path">/{{ Route::getRoutes()->getByName('api.weather.current')->uri() }}</span>
     </div>
     <p class="endpoint-description">
         Get current weather conditions for a specified location in Denmark.
@@ -56,7 +56,7 @@
     </table>
 
     <h3>Example Request</h3>
-    <pre><code>GET {{ route('api.v1.weather.current', ['location' => 'copenhagen']) }}</code></pre>
+    <pre><code>GET {{ route('api.weather.current', ['location' => 'copenhagen']) }}</code></pre>
 
     <h3>Example Response</h3>
     <pre><code>{
@@ -95,7 +95,7 @@
 <div class="endpoint">
     <div class="endpoint-header">
         <span class="method get">GET</span>
-        <span class="endpoint-path">/{{ Route::getRoutes()->getByName('api.v1.weather.forecast')->uri() }}</span>
+        <span class="endpoint-path">/{{ Route::getRoutes()->getByName('api.weather.forecast')->uri() }}</span>
     </div>
     <p class="endpoint-description">
         Get weather forecast for a specified location in Denmark.
@@ -142,7 +142,7 @@
     </table>
 
     <h3>Example Request</h3>
-    <pre><code>GET {{ route('api.v1.weather.forecast', ['location' => 'aarhus']) }}?hours=24</code></pre>
+    <pre><code>GET {{ route('api.weather.forecast', ['location' => 'aarhus']) }}?hours=24</code></pre>
 
     <h3>Example Response</h3>
     <pre><code>{
@@ -175,7 +175,7 @@
 <div class="endpoint">
     <div class="endpoint-header">
         <span class="method get">GET</span>
-        <span class="endpoint-path">/{{ Route::getRoutes()->getByName('api.v1.weather.historical')->uri() }}</span>
+        <span class="endpoint-path">/{{ Route::getRoutes()->getByName('api.weather.historical')->uri() }}</span>
     </div>
     <p class="endpoint-description">
         Get historical weather data for a specified location in Denmark.
@@ -243,7 +243,7 @@
     </table>
 
     <h3>Example Request</h3>
-    <pre><code>GET {{ route('api.v1.weather.historical', ['location' => 'odense']) }}?from=2024-01-01&to=2024-01-31&resolution=day</code></pre>
+    <pre><code>GET {{ route('api.weather.historical', ['location' => 'odense']) }}?from=2024-01-01&to=2024-01-31&resolution=day</code></pre>
 
     <h3>Example Response</h3>
     <pre><code>{
