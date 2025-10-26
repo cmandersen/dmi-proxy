@@ -142,7 +142,7 @@ class WeatherControllerTest extends TestCase
     public function test_can_get_forecast_for_location(): void
     {
         Http::fake([
-            'dmigw.govcloud.dk/v2/forecastedr/collections/harmonie_dini_sf/position*' => Http::response([
+            'dmigw.govcloud.dk/v1/forecastedr/collections/harmonie_dini_sf/position*' => Http::response([
                 'domain' => [
                     'axes' => [
                         't' => [
@@ -192,7 +192,7 @@ class WeatherControllerTest extends TestCase
     public function test_forecast_respects_hours_parameter(): void
     {
         Http::fake([
-            'dmigw.govcloud.dk/v2/forecastedr/collections/harmonie_dini_sf/position*' => Http::response([
+            'dmigw.govcloud.dk/v1/forecastedr/collections/harmonie_dini_sf/position*' => Http::response([
                 'domain' => [
                     'axes' => [
                         't' => [
@@ -222,6 +222,17 @@ class WeatherControllerTest extends TestCase
     public function test_can_get_historical_weather(): void
     {
         Http::fake([
+            'dmigw.govcloud.dk/v2/metObs/collections/station/items*' => Http::response([
+                'features' => [
+                    [
+                        'geometry' => ['coordinates' => [12.5683, 55.6761]],
+                        'properties' => [
+                            'stationId' => '06180',
+                            'name' => 'Copenhagen',
+                        ],
+                    ],
+                ],
+            ]),
             'dmigw.govcloud.dk/v2/climateData/collections/stationValue/items*' => Http::response([
                 'features' => [
                     [
@@ -271,6 +282,17 @@ class WeatherControllerTest extends TestCase
     public function test_historical_supports_different_resolutions(): void
     {
         Http::fake([
+            'dmigw.govcloud.dk/v2/metObs/collections/station/items*' => Http::response([
+                'features' => [
+                    [
+                        'geometry' => ['coordinates' => [12.5683, 55.6761]],
+                        'properties' => [
+                            'stationId' => '06180',
+                            'name' => 'Copenhagen',
+                        ],
+                    ],
+                ],
+            ]),
             'dmigw.govcloud.dk/v2/climateData/collections/stationValue/items*' => Http::response([
                 'features' => [
                     [
