@@ -39,6 +39,7 @@ COPY . /app
 
 RUN rm -f bootstrap/cache/*.php \
     && php artisan package:discover --ansi \
+    && php artisan octane:install --server=frankenphp --no-interaction \
     && php artisan route:cache \
     && php artisan view:cache
 
