@@ -19,6 +19,7 @@ RUN apk add --no-cache curl
 
 RUN install-php-extensions \
     pdo_sqlite \
+    redis \
     opcache \
     pcntl \
     intl \

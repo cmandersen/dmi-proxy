@@ -28,3 +28,7 @@ services:
     environment:
       CONTAINER_ROLE: scheduler
       APP_ENV: local
+
+  redis:
+    ports:
+      - "6379:6379"

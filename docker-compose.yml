@@ -7,8 +7,8 @@ services:
       - "80"
     environment:
       CONTAINER_ROLE: web
-    volumes:
-      - database:/app/database
+    depends_on:
+      - redis
 
   queue:
     build: .
@@ -20,8 +20,6 @@ services:
     depends_on:
       web:
         condition: service_healthy
-    volumes:
-      - database:/app/database
 
   scheduler:
     build: .
@@ -33,8 +31,12 @@ services:
     depends_on:
       web:
         condition: service_healthy
+
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
     volumes:
-      - database:/app/database
+      - redis:/data
 
 volumes:
-  database:
+  redis:
