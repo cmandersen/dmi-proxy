@@ -13,6 +13,8 @@ RUN composer install --no-dev --optimize-autoloader --no-interaction --no-script
 # ===========================================
 FROM dunglas/frankenphp:1-php8.3-alpine AS production
 
+RUN apk add --no-cache curl
+
 RUN install-php-extensions \
     pdo_sqlite \
     opcache \
@@ -44,5 +46,5 @@ CMD ["php", "artisan", "octane:frankenphp", "--host=0.0.0.0", "--port=80"]
 
 EXPOSE 80
 
-HEALTHCHECK --interval=30s --timeout=5s --retries=3 \
+HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=3 \
     CMD curl -f http://localhost/up || exit 1
