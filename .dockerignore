@@ -26,6 +26,9 @@ tests
 .DS_Store
 Homestead.json
 Homestead.yaml
+.bash*
+.profile
+.zshrc
 Makefile
 docker-compose.yml
 docker-compose.override.yml

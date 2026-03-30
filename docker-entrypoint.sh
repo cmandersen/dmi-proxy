@@ -1,8 +1,12 @@
-#!/bin/bash
+#!/bin/sh
 set -e
 
 # Create Laravel storage directories
-mkdir -p /app/storage/{app/public,framework/{cache/data,sessions,views},logs} \
+mkdir -p /app/storage/app/public \
+    /app/storage/framework/cache/data \
+    /app/storage/framework/sessions \
+    /app/storage/framework/views \
+    /app/storage/logs \
     /app/bootstrap/cache
 
 # Ensure SQLite database exists

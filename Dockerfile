@@ -1,7 +1,9 @@
 # ===========================================
 # Stage 1: Install Composer dependencies
 # ===========================================
-FROM composer:2 AS deps
+FROM php:8.3-cli-alpine AS deps
+
+COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
 
 WORKDIR /app
 
@@ -35,7 +37,9 @@ WORKDIR /app
 COPY --from=deps /app/vendor /app/vendor
 COPY . /app
 
-RUN php artisan route:cache \
+RUN rm -f bootstrap/cache/*.php \
+    && php artisan package:discover --ansi \
+    && php artisan route:cache \
     && php artisan view:cache
 
 COPY docker-entrypoint.sh /usr/local/bin/docker-entrypoint

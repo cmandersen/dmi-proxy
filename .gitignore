@@ -25,5 +25,4 @@ Thumbs.db
 /.claude/settings.local.json
 
 **/caddy
-frankenphp
-frankenphp-worker.php
+/frankenphp

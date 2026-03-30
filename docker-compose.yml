@@ -2,6 +2,7 @@ services:
   web:
     build: .
     restart: unless-stopped
+    env_file: .env
     expose:
       - "80"
     environment:
@@ -12,6 +13,7 @@ services:
   queue:
     build: .
     restart: unless-stopped
+    env_file: .env
     command: php artisan queue:work --sleep=3 --tries=3 --max-time=3600
     environment:
       CONTAINER_ROLE: queue
@@ -24,6 +26,7 @@ services:
   scheduler:
     build: .
     restart: unless-stopped
+    env_file: .env
     command: php artisan schedule:work
     environment:
       CONTAINER_ROLE: scheduler
