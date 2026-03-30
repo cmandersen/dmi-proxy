@@ -1,0 +1,37 @@
+services:
+  web:
+    build: .
+    restart: unless-stopped
+    expose:
+      - "80"
+    environment:
+      CONTAINER_ROLE: web
+    volumes:
+      - database:/app/database
+
+  queue:
+    build: .
+    restart: unless-stopped
+    command: php artisan queue:work --sleep=3 --tries=3 --max-time=3600
+    environment:
+      CONTAINER_ROLE: queue
+    depends_on:
+      web:
+        condition: service_healthy
+    volumes:
+      - database:/app/database
+
+  scheduler:
+    build: .
+    restart: unless-stopped
+    command: php artisan schedule:work
+    environment:
+      CONTAINER_ROLE: scheduler
+    depends_on:
+      web:
+        condition: service_healthy
+    volumes:
+      - database:/app/database
+
+volumes:
+  database:
