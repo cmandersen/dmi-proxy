@@ -14,7 +14,7 @@ services:
     build: .
     restart: unless-stopped
     env_file: .env
-    command: php artisan queue:work --sleep=3 --tries=3 --max-time=3600
+    command: php artisan queue:work --sleep=3 --tries=3
     environment:
       CONTAINER_ROLE: queue
     depends_on:
