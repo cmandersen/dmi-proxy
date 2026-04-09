@@ -1,0 +1,34 @@
+services:
+  web:
+    command: php artisan octane:frankenphp --host=0.0.0.0 --port=80 --watch
+    ports:
+      - "80:80"
+    volumes:
+      - .:/app
+      - /app/vendor
+    environment:
+      CONTAINER_ROLE: web
+      APP_ENV: local
+      APP_DEBUG: "true"
+
+  queue:
+    command: php artisan queue:work --sleep=3 --tries=1
+    volumes:
+      - .:/app
+      - /app/vendor
+    environment:
+      CONTAINER_ROLE: queue
+      APP_ENV: local
+
+  scheduler:
+    command: php artisan schedule:work
+    volumes:
+      - .:/app
+      - /app/vendor
+    environment:
+      CONTAINER_ROLE: scheduler
+      APP_ENV: local
+
+  redis:
+    ports:
+      - "6379:6379"
