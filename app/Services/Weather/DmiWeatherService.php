@@ -189,6 +189,7 @@ class DmiWeatherService
 
         $response = Http::dmiMetObs()->get('/collections/station/items', [
             'status' => 'Active',
+            'type' => 'Synop',
             'bbox' => "{$bbox['minLon']},{$bbox['minLat']},{$bbox['maxLon']},{$bbox['maxLat']}",
             'datetime' => now()->toIso8601String().'/..',
             'limit' => 10,

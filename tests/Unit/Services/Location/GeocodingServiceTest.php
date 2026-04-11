@@ -268,6 +268,18 @@ class GeocodingServiceTest extends TestCase
         $this->assertEquals(12.5683, $result['lon']);
     }
 
+    public function test_rejects_non_numeric_comma_separated_input_as_coordinates(): void
+    {
+        Http::fake([
+            'api.dataforsyningen.dk/*' => Http::response([], 404),
+        ]);
+
+        $this->expectException(WeatherServiceException::class);
+
+        // "Odense, Fyn" should NOT be parsed as coordinates (0,0)
+        $this->service->geocode('Odense, Fyn');
+    }
+
     public function test_geocodes_city_case_insensitive(): void
     {
         // Simulate cached data from CacheDanishCities command
