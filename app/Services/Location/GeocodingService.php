@@ -123,8 +123,15 @@ class GeocodingService
     {
         $parts = explode(',', $location);
         if (count($parts) === 2) {
-            $lat = (float) trim($parts[0]);
-            $lon = (float) trim($parts[1]);
+            $latStr = trim($parts[0]);
+            $lonStr = trim($parts[1]);
+
+            if (! is_numeric($latStr) || ! is_numeric($lonStr)) {
+                return null;
+            }
+
+            $lat = (float) $latStr;
+            $lon = (float) $lonStr;
 
             if ($lat >= -90 && $lat <= 90 && $lon >= -180 && $lon <= 180) {
                 return ['lat' => $lat, 'lon' => $lon];
