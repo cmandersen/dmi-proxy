@@ -1,7 +1,6 @@
 <?php
 
+use App\Http\Controllers\DocsController;
 use Illuminate\Support\Facades\Route;
 
-Route::get('/', function () {
-    return view('docs.api');
-});
+Route::get('/', DocsController::class);
