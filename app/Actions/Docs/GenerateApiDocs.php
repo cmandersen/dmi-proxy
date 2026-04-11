@@ -6,6 +6,7 @@ use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Routing\Route;
 use Illuminate\Support\Facades\Route as RouteFacade;
 use Illuminate\Support\Str;
+use Illuminate\Validation\Rules\Enum;
 
 class GenerateApiDocs
 {
@@ -112,8 +113,8 @@ class GenerateApiDocs
     }
 
     /**
-     * @param array<string, mixed> $rules
-     * @param array<string, mixed> $defaults
+     * @param  array<string, mixed>  $rules
+     * @param  array<string, mixed>  $defaults
      * @return array<int, array<string, mixed>>
      */
     private function buildQueryParameters(array $rules, array $defaults): array
@@ -181,7 +182,7 @@ class GenerateApiDocs
     private function extractEnum(array $rules): ?array
     {
         foreach ($rules as $rule) {
-            if ($rule instanceof \Illuminate\Validation\Rules\Enum) {
+            if ($rule instanceof Enum) {
                 $reflection = new \ReflectionClass($rule);
                 $typeProperty = $reflection->getProperty('type');
                 $enumClass = $typeProperty->getValue($rule);
