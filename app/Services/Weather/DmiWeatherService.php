@@ -185,6 +185,22 @@ class DmiWeatherService
 
     private function findNearestStation(float $lat, float $lon): array
     {
+        $cacheKey = "weather:station:{$lat}:{$lon}";
+        $cached = Cache::get($cacheKey);
+
+        if (is_array($cached)) {
+            return $cached;
+        }
+
+        $station = $this->lookupNearestStation($lat, $lon);
+
+        Cache::put($cacheKey, $station, config('services.dmi.cache_ttl.stations', 86400));
+
+        return $station;
+    }
+
+    private function lookupNearestStation(float $lat, float $lon): array
+    {
         $bbox = $this->createBoundingBox($lat, $lon, 50); // 50km radius
 
         $response = Http::dmiMetObs()->get('/collections/station/items', [

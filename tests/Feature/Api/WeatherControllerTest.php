@@ -356,4 +356,59 @@ class WeatherControllerTest extends TestCase
             ->assertStatus(502)
             ->assertJsonPath('error', 'Failed to fetch stations');
     }
+
+    public function test_station_lookup_is_cached_between_requests(): void
+    {
+        Http::fake([
+            'opendataapi.dmi.dk/v2/metObs/collections/station/items*' => Http::response([
+                'features' => [
+                    [
+                        'geometry' => ['coordinates' => [12.5683, 55.6761]],
+                        'properties' => [
+                            'stationId' => '06180',
+                            'name' => 'Copenhagen',
+                        ],
+                    ],
+                ],
+            ]),
+            'opendataapi.dmi.dk/v2/metObs/collections/observation/items*' => Http::response([
+                'features' => [
+                    [
+                        'properties' => [
+                            'observed' => '2024-01-15T12:00:00Z',
+                            'value' => 15.2,
+                        ],
+                    ],
+                ],
+            ]),
+            'opendataapi.dmi.dk/v2/climateData/collections/stationValue/items*' => Http::response([
+                'features' => [],
+            ]),
+        ]);
+
+        $this->getJson('/api/weather/current/copenhagen')->assertStatus(200);
+        $this->getJson('/api/weather/historical/copenhagen?from=2024-01-01&to=2024-01-31')->assertStatus(200);
+
+        $stationRequests = Http::recorded(
+            fn ($request) => str_contains($request->url(), '/collections/station/items')
+        );
+
+        $this->assertCount(1, $stationRequests);
+    }
+
+    public function test_empty_station_result_is_not_cached(): void
+    {
+        Http::fake([
+            'opendataapi.dmi.dk/v2/metObs/collections/station/items*' => Http::response(['features' => []]),
+        ]);
+
+        $this->getJson('/api/weather/current/copenhagen')->assertStatus(404);
+        $this->getJson('/api/weather/current/copenhagen')->assertStatus(404);
+
+        $stationRequests = Http::recorded(
+            fn ($request) => str_contains($request->url(), '/collections/station/items')
+        );
+
+        $this->assertCount(2, $stationRequests);
+    }
 }
