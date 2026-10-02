@@ -26,11 +26,11 @@ class AppServiceProvider extends ServiceProvider
                 'X-Gravitee-Api-Key' => config('services.dmi.climate_key'),
                 'Accept' => 'application/geo+json',
             ])
-                ->baseUrl('https://dmigw.govcloud.dk/v2/climateData')
+                ->baseUrl(config('services.dmi.base_url').'/v2/climateData')
                 ->timeout(10)
                 ->retry(3, 100, function ($exception) {
                     return $exception instanceof ConnectionException;
-                });
+                }, throw: false);
         });
 
         Http::macro('dmiMetObs', function () {
@@ -38,18 +38,18 @@ class AppServiceProvider extends ServiceProvider
                 'X-Gravitee-Api-Key' => config('services.dmi.metobs_key'),
                 'Accept' => 'application/geo+json',
             ])
-                ->baseUrl('https://dmigw.govcloud.dk/v2/metObs')
+                ->baseUrl(config('services.dmi.base_url').'/v2/metObs')
                 ->timeout(10)
-                ->retry(3, 100);
+                ->retry(3, 100, throw: false);
         });
 
         Http::macro('dmiForecast', function () {
             return Http::withHeaders([
                 'X-Gravitee-Api-Key' => config('services.dmi.forecast_key'),
             ])
-                ->baseUrl('https://dmigw.govcloud.dk/v1/forecastedr')
+                ->baseUrl(config('services.dmi.base_url').'/v1/forecastedr')
                 ->timeout(15)
-                ->retry(3, 200);
+                ->retry(3, 200, throw: false);
         });
     }
 }

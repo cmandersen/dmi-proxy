@@ -36,6 +36,7 @@ return [
     ],
 
     'dmi' => [
+        'base_url' => env('DMI_BASE_URL', 'https://opendataapi.dmi.dk'),
         'climate_key' => env('DMI_CLIMATE_KEY'),
         'metobs_key' => env('DMI_METOBS_KEY'),
         'forecast_key' => env('DMI_FORECAST_KEY'),

@@ -157,9 +157,9 @@ class DmiWeatherService
                         'X-Gravitee-Api-Key' => config('services.dmi.climate_key'),
                         'Accept' => 'application/geo+json',
                     ])
-                    ->baseUrl('https://dmigw.govcloud.dk/v2/climateData')
+                    ->baseUrl(config('services.dmi.base_url').'/v2/climateData')
                     ->timeout(30)
-                    ->retry(3, 200)
+                    ->retry(3, 200, throw: false)
                     ->get(
                         '/collections/stationValue/items',
                         [
@@ -222,9 +222,9 @@ class DmiWeatherService
                         'X-Gravitee-Api-Key' => config('services.dmi.metobs_key'),
                         'Accept' => 'application/geo+json',
                     ])
-                    ->baseUrl('https://dmigw.govcloud.dk/v2/metObs')
+                    ->baseUrl(config('services.dmi.base_url').'/v2/metObs')
                     ->timeout(10)
-                    ->retry(3, 100)
+                    ->retry(3, 100, throw: false)
                     ->get(
                         '/collections/observation/items',
                         [
