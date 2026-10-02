@@ -9,14 +9,13 @@ This is a Laravel 12 API application that provides weather data for Denmark via 
 - Current weather conditions
 - Weather forecasts (up to 48 hours)
 - Historical weather data
-- Location geocoding using DAWA (Danish Address Web API)
+- Location geocoding from a bundled dataset (`database/data/locations.json`, exported from DAWA before its shutdown)
 
 ## Key Architecture Patterns
 
 ### Action-Based Architecture
 The codebase uses single-responsibility Action classes for discrete operations:
 - **app/Actions/Weather/** - Weather-related calculations (e.g., `CalculateWindChill`)
-- **app/Actions/Dawa/** - Location data fetching from DAWA API (e.g., `FetchMunicipalities`, `FetchPostalCodes`)
 
 Actions follow the pattern: `execute()` method with clear input/output contracts.
 

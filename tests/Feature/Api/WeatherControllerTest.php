@@ -2,24 +2,15 @@
 
 namespace Tests\Feature\Api;
 
-use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Http;
 use Tests\TestCase;
 
 class WeatherControllerTest extends TestCase
 {
-    protected function setUp(): void
-    {
-        parent::setUp();
-
-        // Simulate cached data from CacheDanishCities command
-        Cache::put('geocode:copenhagen', ['lat' => 55.6761, 'lon' => 12.5683], 86400);
-    }
-
     public function test_can_get_current_weather_for_copenhagen(): void
     {
         Http::fake([
-            'dmigw.govcloud.dk/v2/metObs/collections/station/items*' => Http::response([
+            'opendataapi.dmi.dk/v2/metObs/collections/station/items*' => Http::response([
                 'features' => [
                     [
                         'geometry' => ['coordinates' => [12.5683, 55.6761]],
@@ -30,7 +21,7 @@ class WeatherControllerTest extends TestCase
                     ],
                 ],
             ]),
-            'dmigw.govcloud.dk/v2/metObs/collections/observation/items*' => Http::response([
+            'opendataapi.dmi.dk/v2/metObs/collections/observation/items*' => Http::response([
                 'features' => [
                     [
                         'properties' => [
@@ -55,7 +46,7 @@ class WeatherControllerTest extends TestCase
     public function test_can_get_current_weather_with_coordinates(): void
     {
         Http::fake([
-            'dmigw.govcloud.dk/v2/metObs/collections/station/items*' => Http::response([
+            'opendataapi.dmi.dk/v2/metObs/collections/station/items*' => Http::response([
                 'features' => [
                     [
                         'geometry' => ['coordinates' => [12.5683, 55.6761]],
@@ -66,7 +57,7 @@ class WeatherControllerTest extends TestCase
                     ],
                 ],
             ]),
-            'dmigw.govcloud.dk/v2/metObs/collections/observation/items*' => Http::response([
+            'opendataapi.dmi.dk/v2/metObs/collections/observation/items*' => Http::response([
                 'features' => [
                     [
                         'properties' => [
@@ -97,14 +88,7 @@ class WeatherControllerTest extends TestCase
     public function test_weather_data_is_cached(): void
     {
         Http::fake([
-            'api.dataforsyningen.dk/postnumre*' => Http::response([
-                [
-                    'nr' => '1000',
-                    'navn' => 'København K',
-                    'visueltcenter' => [55.6761, 12.5683],
-                ],
-            ]),
-            'dmigw.govcloud.dk/v2/metObs/collections/station/items*' => Http::response([
+            'opendataapi.dmi.dk/v2/metObs/collections/station/items*' => Http::response([
                 'features' => [
                     [
                         'geometry' => ['coordinates' => [12.5683, 55.6761]],
@@ -115,7 +99,7 @@ class WeatherControllerTest extends TestCase
                     ],
                 ],
             ]),
-            'dmigw.govcloud.dk/v2/metObs/collections/observation/items*' => Http::response([
+            'opendataapi.dmi.dk/v2/metObs/collections/observation/items*' => Http::response([
                 'features' => [
                     [
                         'properties' => [
@@ -142,7 +126,7 @@ class WeatherControllerTest extends TestCase
     public function test_can_get_forecast_for_location(): void
     {
         Http::fake([
-            'dmigw.govcloud.dk/v1/forecastedr/collections/harmonie_dini_sf/position*' => Http::response([
+            'opendataapi.dmi.dk/v1/forecastedr/collections/harmonie_dini_sf/position*' => Http::response([
                 'domain' => [
                     'axes' => [
                         't' => [
@@ -192,7 +176,7 @@ class WeatherControllerTest extends TestCase
     public function test_forecast_respects_hours_parameter(): void
     {
         Http::fake([
-            'dmigw.govcloud.dk/v1/forecastedr/collections/harmonie_dini_sf/position*' => Http::response([
+            'opendataapi.dmi.dk/v1/forecastedr/collections/harmonie_dini_sf/position*' => Http::response([
                 'domain' => [
                     'axes' => [
                         't' => [
@@ -222,7 +206,7 @@ class WeatherControllerTest extends TestCase
     public function test_can_get_historical_weather(): void
     {
         Http::fake([
-            'dmigw.govcloud.dk/v2/metObs/collections/station/items*' => Http::response([
+            'opendataapi.dmi.dk/v2/metObs/collections/station/items*' => Http::response([
                 'features' => [
                     [
                         'geometry' => ['coordinates' => [12.5683, 55.6761]],
@@ -233,7 +217,7 @@ class WeatherControllerTest extends TestCase
                     ],
                 ],
             ]),
-            'dmigw.govcloud.dk/v2/climateData/collections/stationValue/items*' => Http::response([
+            'opendataapi.dmi.dk/v2/climateData/collections/stationValue/items*' => Http::response([
                 'features' => [
                     [
                         'properties' => [
@@ -282,7 +266,7 @@ class WeatherControllerTest extends TestCase
     public function test_historical_supports_different_resolutions(): void
     {
         Http::fake([
-            'dmigw.govcloud.dk/v2/metObs/collections/station/items*' => Http::response([
+            'opendataapi.dmi.dk/v2/metObs/collections/station/items*' => Http::response([
                 'features' => [
                     [
                         'geometry' => ['coordinates' => [12.5683, 55.6761]],
@@ -293,7 +277,7 @@ class WeatherControllerTest extends TestCase
                     ],
                 ],
             ]),
-            'dmigw.govcloud.dk/v2/climateData/collections/stationValue/items*' => Http::response([
+            'opendataapi.dmi.dk/v2/climateData/collections/stationValue/items*' => Http::response([
                 'features' => [
                     [
                         'properties' => [
@@ -309,5 +293,106 @@ class WeatherControllerTest extends TestCase
 
         $response->assertStatus(200)
             ->assertJsonPath('period.resolution', 'month');
+    }
+
+    public function test_dmi_base_url_is_read_from_config(): void
+    {
+        config(['services.dmi.base_url' => 'https://dmi.example.test']);
+
+        Http::fake([
+            'dmi.example.test/v2/metObs/collections/station/items*' => Http::response([
+                'features' => [
+                    [
+                        'geometry' => ['coordinates' => [12.5683, 55.6761]],
+                        'properties' => [
+                            'stationId' => '06180',
+                            'name' => 'Copenhagen',
+                        ],
+                    ],
+                ],
+            ]),
+            'dmi.example.test/v2/metObs/collections/observation/items*' => Http::response([
+                'features' => [
+                    [
+                        'properties' => [
+                            'observed' => '2024-01-15T12:00:00Z',
+                            'value' => 15.2,
+                        ],
+                    ],
+                ],
+            ]),
+        ]);
+
+        $this->getJson('/api/weather/current/copenhagen')->assertStatus(200);
+
+        Http::assertSent(fn ($request) => str_starts_with($request->url(), 'https://dmi.example.test/v2/metObs/collections/station/items'));
+        Http::assertSent(fn ($request) => str_starts_with($request->url(), 'https://dmi.example.test/v2/metObs/collections/observation/items'));
+        Http::assertNotSent(fn ($request) => str_contains($request->url(), 'opendataapi.dmi.dk'));
+    }
+
+    public function test_failed_dmi_response_yields_weather_service_exception_response(): void
+    {
+        Http::fake([
+            'opendataapi.dmi.dk/v2/metObs/collections/station/items*' => Http::response([], 502),
+        ]);
+
+        $this->getJson('/api/weather/current/copenhagen')
+            ->assertStatus(502)
+            ->assertJsonPath('error', 'Failed to fetch stations');
+    }
+
+    public function test_station_lookup_is_cached_between_requests(): void
+    {
+        Http::fake([
+            'opendataapi.dmi.dk/v2/metObs/collections/station/items*' => Http::response([
+                'features' => [
+                    [
+                        'geometry' => ['coordinates' => [12.5683, 55.6761]],
+                        'properties' => [
+                            'stationId' => '06180',
+                            'name' => 'Copenhagen',
+                        ],
+                    ],
+                ],
+            ]),
+            'opendataapi.dmi.dk/v2/metObs/collections/observation/items*' => Http::response([
+                'features' => [
+                    [
+                        'properties' => [
+                            'observed' => '2024-01-15T12:00:00Z',
+                            'value' => 15.2,
+                        ],
+                    ],
+                ],
+            ]),
+            'opendataapi.dmi.dk/v2/climateData/collections/stationValue/items*' => Http::response([
+                'features' => [],
+            ]),
+        ]);
+
+        $this->getJson('/api/weather/current/copenhagen')->assertStatus(200);
+        $this->getJson('/api/weather/historical/copenhagen?from=2024-01-01&to=2024-01-31')->assertStatus(200);
+
+        $stationRequests = Http::recorded(
+            fn ($request) => str_contains($request->url(), '/collections/station/items')
+        );
+
+        $this->assertCount(1, $stationRequests);
+    }
+
+    public function test_empty_station_result_is_not_cached(): void
+    {
+        Http::fake([
+            'opendataapi.dmi.dk/v2/metObs/collections/station/items*' => Http::response(['features' => []]),
+        ]);
+
+        $this->getJson('/api/weather/current/copenhagen')->assertStatus(404);
+        $this->getJson('/api/weather/current/copenhagen')->assertStatus(404);
+
+        $stationRequests = Http::recorded(
+            fn ($request) => str_contains($request->url(), '/collections/station/items')
+        );
+
+        $this->assertCount(2, $stationRequests);
     }
 }
