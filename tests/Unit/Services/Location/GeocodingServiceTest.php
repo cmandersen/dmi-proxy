@@ -5,6 +5,8 @@ namespace Tests\Unit\Services\Location;
 use App\Exceptions\WeatherServiceException;
 use App\Services\Location\GeocodingService;
 use Illuminate\Support\Facades\Http;
+use PHPUnit\Framework\Attributes\DataProvider;
+use RuntimeException;
 use Tests\TestCase;
 
 class GeocodingServiceTest extends TestCase
@@ -14,6 +16,9 @@ class GeocodingServiceTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
+
+        config(['services.locations.path' => base_path('tests/Fixtures/locations.json')]);
+
         $this->service = app(GeocodingService::class);
     }
 
@@ -21,279 +26,195 @@ class GeocodingServiceTest extends TestCase
     {
         $result = $this->service->geocode('55.6761,12.5683');
 
-        $this->assertEquals(55.6761, $result['lat']);
-        $this->assertEquals(12.5683, $result['lon']);
+        $this->assertSame(['lat' => 55.68, 'lon' => 12.57], $result);
     }
 
     public function test_geocodes_coordinates_with_spaces(): void
     {
         $result = $this->service->geocode('55.6761, 12.5683');
 
-        $this->assertEquals(55.6761, $result['lat']);
-        $this->assertEquals(12.5683, $result['lon']);
+        $this->assertSame(['lat' => 55.68, 'lon' => 12.57], $result);
     }
 
-    public function test_geocodes_known_city_from_cache(): void
+    public function test_geocodes_city_name_from_dataset(): void
     {
-        // Simulate cached data from CacheDanishCities command
-        cache()->put('geocode:copenhagen', ['lat' => 55.6761, 'lon' => 12.5683], 86400);
+        $result = $this->service->geocode('vejle');
 
-        Http::fake([
-            'api.dataforsyningen.dk/*' => Http::response([], 404),
-        ]);
-
-        $result = $this->service->geocode('copenhagen');
-
-        $this->assertEquals(55.6761, $result['lat']);
-        $this->assertEquals(12.5683, $result['lon']);
+        $this->assertSame(['lat' => 55.71, 'lon' => 9.54], $result);
     }
 
-    public function test_geocodes_danish_city_name(): void
+    public function test_geocodes_danish_characters(): void
     {
-        // Simulate cached data from CacheDanishCities command
-        cache()->put('geocode:københavn', ['lat' => 55.6761, 'lon' => 12.5683], 86400);
-
-        Http::fake([
-            'api.dataforsyningen.dk/*' => Http::response([], 404),
-        ]);
-
         $result = $this->service->geocode('København');
 
-        $this->assertEquals(55.6761, $result['lat']);
-        $this->assertEquals(12.5683, $result['lon']);
+        $this->assertSame(['lat' => 55.7, 'lon' => 12.49], $result);
     }
 
-    public function test_geocodes_with_dawa_postal_code(): void
+    public function test_geocodes_postal_code(): void
     {
-        Http::fake([
-            'api.dataforsyningen.dk/postnumre*' => Http::response([
-                [
-                    'nr' => '8000',
-                    'navn' => 'Aarhus C',
-                    'visueltcenter' => [10.2039, 56.1629], // [lon, lat] format
-                ],
-            ]),
-        ]);
-
         $result = $this->service->geocode('8000');
 
-        $this->assertEquals(56.1629, $result['lat']);
-        $this->assertEquals(10.2039, $result['lon']);
+        $this->assertSame(['lat' => 56.15, 'lon' => 10.28], $result);
     }
 
-    public function test_geocodes_with_dawa_city_name(): void
+    public function test_resolves_aliases(): void
     {
-        Http::fake([
-            'api.dataforsyningen.dk/postnumre*' => Http::response([], 404),
-            'api.dataforsyningen.dk/kommuner*' => Http::response([
-                [
-                    'kode' => '0630',
-                    'navn' => 'Vejle',
-                    'visueltcenter' => [9.5357, 55.7074], // [lon, lat] format
-                ],
-            ]),
-        ]);
-
-        $result = $this->service->geocode('Vejle');
-
-        $this->assertEquals(55.7074, $result['lat']);
-        $this->assertEquals(9.5357, $result['lon']);
+        $this->assertSame($this->service->geocode('københavn'), $this->service->geocode('Copenhagen'));
+        $this->assertSame($this->service->geocode('aarhus'), $this->service->geocode('Århus'));
     }
 
-    public function test_normalizes_input_text(): void
+    public function test_geocodes_city_case_and_whitespace_insensitive(): void
     {
-        // Simulate cached data from CacheDanishCities command
-        cache()->put('geocode:copenhagen', ['lat' => 55.6761, 'lon' => 12.5683], 86400);
+        $expected = $this->service->geocode('odense');
 
-        Http::fake([
-            'api.dataforsyningen.dk/*' => Http::response([], 404),
-        ]);
+        $this->assertSame($expected, $this->service->geocode('ODENSE'));
+        $this->assertSame($expected, $this->service->geocode('  OdEnSe  '));
+    }
 
-        $result1 = $this->service->geocode('  COPENHAGEN  ');
-        $result2 = $this->service->geocode('copenhagen');
+    public function test_does_not_make_http_requests(): void
+    {
+        Http::fake();
 
-        $this->assertEquals($result1, $result2);
+        $this->service->geocode('aalborg');
+
+        Http::assertNothingSent();
     }
 
     public function test_throws_exception_for_unknown_location(): void
     {
-        Http::fake([
-            'api.dataforsyningen.dk/*' => Http::response([], 404),
-        ]);
+        try {
+            $this->service->geocode('unknowncityxyz');
+            $this->fail('Expected WeatherServiceException was not thrown.');
+        } catch (WeatherServiceException $exception) {
+            $this->assertSame(400, $exception->getCode());
+            $this->assertStringContainsString('Unable to geocode location: unknowncityxyz', $exception->getMessage());
+            $this->assertStringNotContainsString('Did you mean', $exception->getMessage());
+        }
+    }
 
+    public function test_suggests_close_matches_for_misspelled_location(): void
+    {
+        try {
+            $this->service->geocode('Aalborgg');
+            $this->fail('Expected WeatherServiceException was not thrown.');
+        } catch (WeatherServiceException $exception) {
+            $this->assertSame(400, $exception->getCode());
+            $this->assertStringContainsString('Did you mean: aalborg?', $exception->getMessage());
+        }
+    }
+
+    public function test_does_not_suggest_for_very_short_input(): void
+    {
+        try {
+            $this->service->geocode('aa');
+            $this->fail('Expected WeatherServiceException was not thrown.');
+        } catch (WeatherServiceException $exception) {
+            $this->assertStringNotContainsString('Did you mean', $exception->getMessage());
+        }
+    }
+
+    public function test_unknown_postal_code_is_rejected(): void
+    {
         $this->expectException(WeatherServiceException::class);
-        $this->expectExceptionMessage('Unable to geocode location: unknowncityxyz');
+        $this->expectExceptionCode(400);
 
-        $this->service->geocode('unknowncityxyz');
-    }
-
-    public function test_handles_dawa_api_failure_gracefully(): void
-    {
-        // Simulate cached data from CacheDanishCities command
-        cache()->put('geocode:copenhagen', ['lat' => 55.6761, 'lon' => 12.5683], 86400);
-
-        Http::fake([
-            'api.dataforsyningen.dk/*' => Http::response([], 500),
-        ]);
-
-        // Should fall back to cached data
-        $result = $this->service->geocode('copenhagen');
-
-        $this->assertEquals(55.6761, $result['lat']);
-        $this->assertEquals(12.5683, $result['lon']);
-    }
-
-    public function test_geocodes_postal_code_from_cache(): void
-    {
-        // Simulate cached data from CacheDanishCities command
-        cache()->put('geocode:1000', ['lat' => 55.6761, 'lon' => 12.5683], 86400);
-
-        Http::fake([
-            'api.dataforsyningen.dk/*' => Http::response([], 404),
-        ]);
-
-        $result = $this->service->geocode('1000');
-
-        $this->assertEquals(55.6761, $result['lat']);
-        $this->assertEquals(12.5683, $result['lon']);
-    }
-
-    public function test_geocodes_multiple_major_cities(): void
-    {
-        // Simulate cached data from CacheDanishCities command
-        $cities = [
-            'copenhagen' => ['lat' => 55.6761, 'lon' => 12.5683],
-            'aarhus' => ['lat' => 56.1629, 'lon' => 10.2039],
-            'odense' => ['lat' => 55.4038, 'lon' => 10.4024],
-            'aalborg' => ['lat' => 57.0488, 'lon' => 9.9217],
-        ];
-
-        foreach ($cities as $city => $coords) {
-            cache()->put("geocode:{$city}", $coords, 86400);
-        }
-
-        Http::fake([
-            'api.dataforsyningen.dk/*' => Http::response([], 404),
-        ]);
-
-        foreach ($cities as $city => $expected) {
-            $result = $this->service->geocode($city);
-            $this->assertEquals($expected['lat'], $result['lat'], "Failed for $city");
-            $this->assertEquals($expected['lon'], $result['lon'], "Failed for $city");
-        }
+        $this->service->geocode('9999');
     }
 
     public function test_rejects_invalid_coordinate_format(): void
     {
         $this->expectException(WeatherServiceException::class);
 
-        $this->service->geocode('55.6761');  // Missing longitude
+        $this->service->geocode('55.6761');
     }
 
-    public function test_rejects_invalid_coordinates(): void
+    public function test_non_numeric_comma_separated_input_is_treated_as_a_name(): void
     {
-        Http::fake([
-            'api.dataforsyningen.dk/*' => Http::response([], 404),
-        ]);
-
         $this->expectException(WeatherServiceException::class);
+        $this->expectExceptionMessage('Unable to geocode location: Odense, Fyn');
 
-        // Coordinates outside valid ranges (lat must be -90 to 90, lon must be -180 to 180)
-        $this->service->geocode('200,300');
-    }
-
-    public function test_caches_geocoding_results(): void
-    {
-        Http::fake([
-            'api.dataforsyningen.dk/postnumre*' => Http::response([
-                [
-                    'nr' => '8000',
-                    'navn' => 'Aarhus C',
-                    'visueltcenter' => [10.2039, 56.1629], // [lon, lat] format
-                ],
-            ]),
-        ]);
-
-        // First call
-        $result1 = $this->service->geocode('8000');
-
-        // Second call - should use cache, won't hit HTTP
-        Http::fake([
-            'api.dataforsyningen.dk/*' => Http::response([], 500), // Would fail if called
-        ]);
-
-        $result2 = $this->service->geocode('8000');
-
-        $this->assertEquals($result1, $result2);
-    }
-
-    public function test_handles_dawa_response_with_multiple_results(): void
-    {
-        Http::fake([
-            'api.dataforsyningen.dk/postnumre*' => Http::response([], 404),
-            'api.dataforsyningen.dk/kommuner*' => Http::response([
-                [
-                    'kode' => '0751',
-                    'navn' => 'Aarhus',
-                    'visueltcenter' => [10.2039, 56.1629], // [lon, lat] format
-                ],
-                [
-                    'kode' => '0760',
-                    'navn' => 'Aarhus N',
-                    'visueltcenter' => [10.2100, 56.1700], // [lon, lat] format
-                ],
-            ]),
-        ]);
-
-        // Should return first match
-        $result = $this->service->geocode('aarhus');
-
-        $this->assertEquals(56.1629, $result['lat']);
-        $this->assertEquals(10.2039, $result['lon']);
-    }
-
-    public function test_handles_empty_dawa_response(): void
-    {
-        // Simulate cached data from CacheDanishCities command
-        cache()->put('geocode:copenhagen', ['lat' => 55.6761, 'lon' => 12.5683], 86400);
-
-        Http::fake([
-            'api.dataforsyningen.dk/postnumre*' => Http::response([]),
-        ]);
-
-        // Should fall back to cached data
-        $result = $this->service->geocode('copenhagen');
-
-        $this->assertEquals(55.6761, $result['lat']);
-        $this->assertEquals(12.5683, $result['lon']);
-    }
-
-    public function test_rejects_non_numeric_comma_separated_input_as_coordinates(): void
-    {
-        Http::fake([
-            'api.dataforsyningen.dk/*' => Http::response([], 404),
-        ]);
-
-        $this->expectException(WeatherServiceException::class);
-
-        // "Odense, Fyn" should NOT be parsed as coordinates (0,0)
         $this->service->geocode('Odense, Fyn');
     }
 
-    public function test_geocodes_city_case_insensitive(): void
+    public function test_throws_when_dataset_is_missing(): void
     {
-        // Simulate cached data from CacheDanishCities command
-        cache()->put('geocode:copenhagen', ['lat' => 55.6761, 'lon' => 12.5683], 86400);
+        config(['services.locations.path' => base_path('tests/Fixtures/does-not-exist.json')]);
 
-        Http::fake([
-            'api.dataforsyningen.dk/*' => Http::response([], 404),
-        ]);
+        $this->expectException(RuntimeException::class);
 
-        $result1 = $this->service->geocode('COPENHAGEN');
-        $result2 = $this->service->geocode('copenhagen');
-        $result3 = $this->service->geocode('CoPenHaGen');
+        $this->service->geocode('aalborg');
+    }
 
-        $this->assertEquals($result1, $result2);
-        $this->assertEquals($result2, $result3);
+    public function test_rounds_coordinates_to_two_decimals(): void
+    {
+        $result = $this->service->geocode('56.117904874739,10.182675838818');
+
+        $this->assertSame(56.12, $result['lat']);
+        $this->assertSame(10.18, $result['lon']);
+    }
+
+    public function test_trims_whitespace_around_coordinates(): void
+    {
+        $result = $this->service->geocode('  56.117904874739 ,   10.182675838818  ');
+
+        $this->assertSame(56.12, $result['lat']);
+        $this->assertSame(10.18, $result['lon']);
+    }
+
+    public function test_nearby_coordinates_resolve_to_same_rounded_value(): void
+    {
+        $this->assertSame(
+            $this->service->geocode('56.1179,10.1826'),
+            $this->service->geocode('56.1201,10.1849')
+        );
+    }
+
+    /**
+     * @return array<string, array{string}>
+     */
+    public static function outOfBoundsCoordinatesProvider(): array
+    {
+        return [
+            'new york' => ['40.7,-74.0'],
+            'null island' => ['0,0'],
+            'latitude too low' => ['53.99,10.0'],
+            'latitude too high' => ['58.01,10.0'],
+            'longitude too low' => ['56.0,7.49'],
+            'longitude too high' => ['56.0,15.51'],
+            'beyond valid ranges' => ['200,300'],
+        ];
+    }
+
+    #[DataProvider('outOfBoundsCoordinatesProvider')]
+    public function test_rejects_coordinates_outside_denmark(string $location): void
+    {
+        try {
+            $this->service->geocode($location);
+            $this->fail('Expected WeatherServiceException was not thrown.');
+        } catch (WeatherServiceException $exception) {
+            $this->assertSame(400, $exception->getCode());
+            $this->assertSame('Coordinates must be within Denmark.', $exception->getMessage());
+        }
+    }
+
+    /**
+     * @return array<string, array{string, float, float}>
+     */
+    public static function edgeCoordinatesProvider(): array
+    {
+        return [
+            'south west corner' => ['54.0,7.5', 54.0, 7.5],
+            'north east corner' => ['58.0,15.5', 58.0, 15.5],
+            'bornholm' => ['55.1,14.9', 55.1, 14.9],
+        ];
+    }
+
+    #[DataProvider('edgeCoordinatesProvider')]
+    public function test_accepts_coordinates_at_edges_and_bornholm(string $location, float $lat, float $lon): void
+    {
+        $result = $this->service->geocode($location);
+
+        $this->assertSame($lat, $result['lat']);
+        $this->assertSame($lon, $result['lon']);
     }
 }

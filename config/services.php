@@ -35,6 +35,10 @@ return [
         ],
     ],
 
+    'locations' => [
+        'path' => env('LOCATIONS_PATH', database_path('data/locations.json')),
+    ],
+
     'dmi' => [
         'base_url' => env('DMI_BASE_URL', 'https://opendataapi.dmi.dk'),
         'climate_key' => env('DMI_CLIMATE_KEY'),
@@ -45,7 +49,6 @@ return [
             'forecast' => env('DMI_CACHE_FORECAST', 1800), // 30 minutes
             'historical' => env('DMI_CACHE_HISTORICAL', 86400), // 24 hours
             'stations' => env('DMI_CACHE_STATIONS', 86400), // 24 hours
-            'geocoding' => env('DMI_CACHE_GEOCODING', 86400), // 24 hours
         ],
     ],
 

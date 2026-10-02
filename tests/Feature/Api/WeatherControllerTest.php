@@ -2,20 +2,11 @@
 
 namespace Tests\Feature\Api;
 
-use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Http;
 use Tests\TestCase;
 
 class WeatherControllerTest extends TestCase
 {
-    protected function setUp(): void
-    {
-        parent::setUp();
-
-        // Simulate cached data from CacheDanishCities command
-        Cache::put('geocode:copenhagen', ['lat' => 55.6761, 'lon' => 12.5683], 86400);
-    }
-
     public function test_can_get_current_weather_for_copenhagen(): void
     {
         Http::fake([
@@ -97,13 +88,6 @@ class WeatherControllerTest extends TestCase
     public function test_weather_data_is_cached(): void
     {
         Http::fake([
-            'api.dataforsyningen.dk/postnumre*' => Http::response([
-                [
-                    'nr' => '1000',
-                    'navn' => 'København K',
-                    'visueltcenter' => [55.6761, 12.5683],
-                ],
-            ]),
             'opendataapi.dmi.dk/v2/metObs/collections/station/items*' => Http::response([
                 'features' => [
                     [

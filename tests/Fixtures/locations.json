@@ -1,0 +1,16 @@
+{
+    "source": "Test fixture",
+    "aliases": {
+        "copenhagen": "københavn",
+        "århus": "aarhus"
+    },
+    "locations": {
+        "1050": [55.6807, 12.586],
+        "8000": [56.1505, 10.278],
+        "aarhus": [56.1551, 10.1036],
+        "aalborg": [56.9809, 9.9971],
+        "københavn": [55.7041, 12.4939],
+        "odense": [55.3917, 10.2985],
+        "vejle": [55.7074, 9.5357]
+    }
+}

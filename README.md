@@ -58,14 +58,10 @@ DMI_FORECAST_KEY=your_forecast_api_key
 DMI_CACHE_CURRENT=300        # 5 minutes
 DMI_CACHE_FORECAST=1800      # 30 minutes
 DMI_CACHE_HISTORICAL=86400   # 24 hours
-DMI_CACHE_GEOCODING=86400    # 24 hours
+DMI_CACHE_STATIONS=86400     # 24 hours
 ```
 
-7. Cache Danish cities for faster geocoding:
-
-```bash
-php artisan weather:cache-cities
-```
+Geocoding uses the bundled dataset in `database/data/locations.json` (municipalities, towns and postal codes from DAWA and GeoNames), so no setup is needed.
 
 ## Usage
 
@@ -167,9 +163,6 @@ vendor/bin/pint
 ```
 app/
 ├── Actions/          # Reusable action classes
-│   └── Dawa/        # Danish Address Web API integrations
-├── Console/
-│   └── Commands/    # Artisan commands
 ├── DTOs/            # Data Transfer Objects
 ├── Enums/           # Validation enums
 ├── Exceptions/      # Custom exceptions
@@ -207,7 +200,7 @@ The API implements intelligent caching:
 -   **Current weather**: 5 minutes (configurable)
 -   **Forecast data**: 30 minutes (configurable)
 -   **Historical data**: 24 hours (configurable)
--   **Geocoding results**: 24 hours (configurable)
+-   **Nearest station lookups**: 24 hours (configurable)
 
 Clear all caches:
 
@@ -218,4 +211,5 @@ php artisan cache:clear
 ## Credits
 
 -   Weather data provided by [Danish Meteorological Institute (DMI)](https://www.dmi.dk/)
--   Geocoding powered by [DAWA (Danish Address Web API)](https://dawadocs.dataforsyningen.dk/)
+-   Location data exported from DAWA (Danish Address Web API) before its shutdown on 1 October 2026
+-   Postal code place names from [GeoNames](https://www.geonames.org/), licensed under [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/)
