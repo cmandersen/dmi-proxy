@@ -337,7 +337,7 @@ class WeatherControllerTest extends TestCase
         ]);
 
         $this->getJson('/api/weather/current/copenhagen')
-            ->assertStatus(502)
+            ->assertStatus(503)
             ->assertJsonPath('error', 'Failed to fetch stations');
     }
 

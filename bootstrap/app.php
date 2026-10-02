@@ -27,10 +27,12 @@ return Application::configure(basePath: dirname(__DIR__))
     ->withExceptions(function (Exceptions $exceptions): void {
         $exceptions->render(function (WeatherServiceException $e, Request $request) {
             if ($request->is('api/*')) {
+                $status = $e->getCode() >= 400 && $e->getCode() <= 599 ? $e->getCode() : 500;
+
                 return response()->json([
                     'error' => $e->getMessage(),
                     'location' => $request->route('location'),
-                ], $e->getCode() >= 400 && $e->getCode() <= 599 ? $e->getCode() : 500);
+                ], $status, $status === 503 ? ['Retry-After' => '60'] : []);
             }
         });
 
