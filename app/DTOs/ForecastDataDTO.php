@@ -14,5 +14,6 @@ class ForecastDataDTO extends Data
         #[WithTransformer(DateTimeInterfaceTransformer::class, format: 'c')]
         public Carbon $generated_at,
         public array $forecast,
+        public bool $stale = false,
     ) {}
 }

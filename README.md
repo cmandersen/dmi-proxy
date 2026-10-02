@@ -57,6 +57,7 @@ DMI_FORECAST_KEY=your_forecast_api_key
 ```env
 DMI_CACHE_CURRENT=300        # 5 minutes
 DMI_CACHE_FORECAST=1800      # 30 minutes
+DMI_CACHE_FORECAST_LAST_GOOD=21600  # 6 hours, served (stale: true) when DMI fails
 DMI_CACHE_HISTORICAL=86400   # 24 hours
 DMI_CACHE_STATIONS=86400     # 24 hours
 ```

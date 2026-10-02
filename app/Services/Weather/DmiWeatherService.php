@@ -11,6 +11,7 @@ use App\DTOs\WeatherDataDTO;
 use App\Exceptions\WeatherServiceException;
 use App\Services\Location\GeocodingService;
 use Carbon\Carbon;
+use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Http\Client\Response;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Http;
@@ -47,43 +48,81 @@ class DmiWeatherService
     public function getForecast(string $location, int $hours = 48): ForecastDataDTO
     {
         $coords = $this->geocoding->geocode($location);
-        $cacheKey = "weather:forecast:{$coords['lat']}:{$coords['lon']}:{$hours}";
+        $cacheKey = "weather:forecast:{$coords['lat']}:{$coords['lon']}";
+        $lastGoodCacheKey = "weather:forecast:last-good:{$coords['lat']}:{$coords['lon']}";
+        $isStale = false;
 
-        return Cache::remember($cacheKey, config('services.dmi.cache_ttl.forecast'),
-            function () use ($coords, $location, $hours) {
-                $response = Http::dmiForecast()->get(
-                    '/collections/harmonie_dini_sf/position',
-                    [
-                        'coords' => "POINT({$coords['lon']} {$coords['lat']})",
-                        'parameter-name' => 'temperature-2m,wind-speed-10m,wind-dir-10m,total-precipitation,fraction-of-cloud-cover',
-                    ]
-                );
+        $forecast = Cache::get($cacheKey);
 
-                if ($response->failed()) {
-                    throw new WeatherServiceException(
-                        'Failed to fetch forecast data',
-                        $response->status()
-                    );
+        if (! is_array($forecast)) {
+            try {
+                $forecast = $this->fetchForecast($coords['lat'], $coords['lon']);
+            } catch (WeatherServiceException|ConnectionException $exception) {
+                $forecast = Cache::get($lastGoodCacheKey);
+
+                if (! is_array($forecast)) {
+                    throw $exception;
                 }
 
-                $forecastData = $this->transformer->transformForecast($response->json());
-
-                // Limit to requested hours
-                $limitedForecast = array_slice($forecastData, 0, $hours);
-
-                return new ForecastDataDTO(
-                    location: new LocationData(
-                        name: $location,
-                        coordinates: new CoordinatesData(
-                            lat: $coords['lat'],
-                            lon: $coords['lon'],
-                        ),
-                    ),
-                    generated_at: now(),
-                    forecast: $limitedForecast,
-                );
+                $isStale = true;
             }
+
+            if (! $isStale) {
+                Cache::put($cacheKey, $forecast, config('services.dmi.cache_ttl.forecast'));
+                Cache::put($lastGoodCacheKey, $forecast, config('services.dmi.cache_ttl.forecast_last_good', 21600));
+            }
+        }
+
+        $upcomingForecast = array_values(array_filter(
+            $forecast['forecast'],
+            fn (array $dataPoint) => Carbon::parse($dataPoint['timestamp'])->isFuture()
+        ));
+
+        return new ForecastDataDTO(
+            location: new LocationData(
+                name: $location,
+                coordinates: new CoordinatesData(
+                    lat: $coords['lat'],
+                    lon: $coords['lon'],
+                ),
+            ),
+            generated_at: Carbon::parse($forecast['generated_at']),
+            forecast: array_slice($upcomingForecast, 0, $hours),
+            stale: $isStale,
         );
+    }
+
+    /**
+     * @return array{generated_at: string, forecast: array<int, array<string, mixed>>}
+     */
+    private function fetchForecast(float $lat, float $lon): array
+    {
+        $response = Http::dmiForecast()->get(
+            '/collections/harmonie_dini_sf/position',
+            [
+                'coords' => "POINT({$lon} {$lat})",
+                'parameter-name' => 'temperature-2m,wind-speed-10m,wind-dir-10m,total-precipitation,fraction-of-cloud-cover',
+            ]
+        );
+
+        if ($response->failed()) {
+            throw $this->upstreamException('Failed to fetch forecast data', $response);
+        }
+
+        return [
+            'generated_at' => now()->toIso8601String(),
+            'forecast' => $this->transformer->transformForecast($response->json()),
+        ];
+    }
+
+    /**
+     * Upstream overload (429) and server errors become a 503 so clients retry later; other failures are a 502.
+     */
+    private function upstreamException(string $message, Response $response): WeatherServiceException
+    {
+        $isTemporary = $response->status() === 429 || $response->serverError();
+
+        return new WeatherServiceException($message, $isTemporary ? 503 : 502);
     }
 
     public function getHistoricalWeather(
@@ -212,10 +251,7 @@ class DmiWeatherService
         ]);
 
         if ($response->failed()) {
-            throw new WeatherServiceException(
-                'Failed to fetch stations',
-                $response->status()
-            );
+            throw $this->upstreamException('Failed to fetch stations', $response);
         }
 
         $stations = $response->json('features', []);

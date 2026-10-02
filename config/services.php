@@ -47,6 +47,7 @@ return [
         'cache_ttl' => [
             'current' => env('DMI_CACHE_CURRENT', 300),    // 5 minutes
             'forecast' => env('DMI_CACHE_FORECAST', 1800), // 30 minutes
+            'forecast_last_good' => env('DMI_CACHE_FORECAST_LAST_GOOD', 21600), // 6 hours, served when DMI fails
             'historical' => env('DMI_CACHE_HISTORICAL', 86400), // 24 hours
             'stations' => env('DMI_CACHE_STATIONS', 86400), // 24 hours
         ],

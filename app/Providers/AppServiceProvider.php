@@ -3,8 +3,10 @@
 namespace App\Providers;
 
 use Illuminate\Http\Client\ConnectionException;
+use Illuminate\Http\Client\RequestException;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\ServiceProvider;
+use Throwable;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -48,8 +50,11 @@ class AppServiceProvider extends ServiceProvider
                 'X-Gravitee-Api-Key' => config('services.dmi.forecast_key'),
             ])
                 ->baseUrl(config('services.dmi.base_url').'/v1/forecastedr')
-                ->timeout(15)
-                ->retry(3, 200, throw: false);
+                ->timeout(30)
+                ->retry([500, 1500], when: function (Throwable $exception): bool {
+                    return $exception instanceof ConnectionException
+                        || ($exception instanceof RequestException && $exception->response->serverError());
+                }, throw: false);
         });
     }
 }
