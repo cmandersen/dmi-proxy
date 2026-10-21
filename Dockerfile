@@ -33,6 +33,8 @@ RUN { \
     echo 'opcache.interned_strings_buffer=16'; \
     } > /usr/local/etc/php/conf.d/opcache-prod.ini
 
+RUN echo 'session.upload_progress.enabled=0' > /usr/local/etc/php/conf.d/security.ini
+
 WORKDIR /app
 
 COPY --from=deps /app/vendor /app/vendor
